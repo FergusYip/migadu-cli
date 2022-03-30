@@ -32,7 +32,14 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("mailbox list called")
+		data, err := client.ListMailboxes(args[0])
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		for _, mailbox := range data.Mailboxes {
+			fmt.Printf("%s\t%s\n", mailbox.Name, mailbox.Address)
+		}
 	},
 }
 
@@ -47,7 +54,12 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("mailbox show called")
+		mailbox, err := client.ShowMailbox(args[0], args[1])
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Printf("%s\t%s\n", mailbox.Name, mailbox.Address)
 	},
 }
 

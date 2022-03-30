@@ -6,12 +6,15 @@ package cmd
 
 import (
 	"fmt"
+	migadu "github.com/FergusYip/migadu-cli/migadu"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
 )
 
 var configFile string
+
+var client *migadu.MigaduClient
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -71,5 +74,7 @@ func initConfig() {
 		}
 	} else {
 		fmt.Println("Using configuration file: ", viper.ConfigFileUsed())
+
+		client = migadu.NewMigaduClient(viper.GetString("username"), viper.GetString("apiKey"))
 	}
 }

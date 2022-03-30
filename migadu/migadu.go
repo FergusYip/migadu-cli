@@ -2,9 +2,11 @@
 Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 
 */
-package main
+package migadu
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -87,38 +89,72 @@ func NewMigaduClient(username string, apiKey string) *MigaduClient {
 	}
 }
 
-func (s *MigaduClient) sendRequest(req *http.Request) ([]byte, error) {
+func (s *MigaduClient) sendRequest(method string, url string, payload any, response any) error {
+
+	j, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest(method, url, bytes.NewBuffer(j))
+
 	req.SetBasicAuth(s.Username, s.ApiKey)
+
 	client := &http.Client{}
+
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
+
 	if err != nil {
-		return nil, err
+		return err
 	}
+
 	if 200 != resp.StatusCode {
-		return nil, fmt.Errorf("%s", body)
+		return fmt.Errorf("%s", body)
 	}
-	return body, nil
+
+	return json.Unmarshal(body, response)
 }
 
-// func (s *MigaduClient) ListMailboxes() (*Todo, error) {
-// 	url := fmt.Sprintf(baseURL+"/%s/todos/%d", s.Username, id)
-// 	req, err := http.NewRequest("GET", url, nil)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	bytes, err := s.doRequest(req)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	var data Todo
-// 	err = json.Unmarshal(bytes, &data)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return &data, nil
-// }
+type ListMailboxesResult struct {
+	Mailboxes []Mailbox `json:mailboxes`
+}
+
+func (s *MigaduClient) ListMailboxes(domain string) (ListMailboxesResult, error) {
+	url := fmt.Sprintf(BASE_URL+"/%s/mailboxes", domain)
+	var data ListMailboxesResult
+	err := s.sendRequest("GET", url, nil, &data)
+	return data, err
+}
+
+func (s *MigaduClient) ShowMailbox(domain string, localPart string) (Mailbox, error) {
+	url := fmt.Sprintf(BASE_URL+"/%s/mailboxes/%s", domain, localPart)
+	var data Mailbox
+	err := s.sendRequest("GET", url, nil, &data)
+	return data, err
+}
+
+func (s *MigaduClient) CreateMailbox(domain string) ([]Mailbox, error) {
+	url := fmt.Sprintf(BASE_URL+"/%s/mailboxes", domain)
+	var data []Mailbox
+	err := s.sendRequest("POST", url, nil, &data)
+	return data, err
+}
+
+func (s *MigaduClient) UpdateMailbox(domain string, localPart string) ([]Mailbox, error) {
+	url := fmt.Sprintf(BASE_URL+"/%s/mailboxes/%s", domain, localPart)
+	var data []Mailbox
+	err := s.sendRequest("PUT", url, nil, &data)
+	return data, err
+}
+
+func (s *MigaduClient) DeleteMailbox(domain string, localPart string) ([]Mailbox, error) {
+	url := fmt.Sprintf(BASE_URL+"/%s/mailboxes/%s", domain, localPart)
+	var data []Mailbox
+	err := s.sendRequest("DELETE", url, nil, &data)
+	return data, err
+}
