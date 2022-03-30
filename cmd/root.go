@@ -59,13 +59,15 @@ func initConfig() {
 	}
 
 	if err := viper.ReadInConfig(); err != nil {
-		fmt.Println(err)
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			// Config file not found; ignore error if desired
 			fmt.Println("Missing configuration. Run migadu-cli setup")
+
+			os.Exit(1) // TODO Be smart and run it for the user
 		} else {
 			// Config file was found but another error was produced
-			fmt.Println(err)
+			fmt.Println("Invalid configuration file: ", viper.ConfigFileUsed())
+			os.Exit(1)
 		}
 	} else {
 		fmt.Println("Using configuration file: ", viper.ConfigFileUsed())
