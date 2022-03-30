@@ -7,9 +7,11 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"regexp"
+
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
-	"regexp"
+	"github.com/spf13/viper"
 )
 
 // setupCmd represents the setup command
@@ -55,8 +57,17 @@ var setupCmd = &cobra.Command{
 			return
 		}
 
-		fmt.Printf("Account Email: %q\n", username)
-		fmt.Printf("API Keu: %q\n", apiKey)
+		viper.Set("username", username)
+		viper.Set("apiKey", apiKey)
+
+		err = viper.WriteConfig()
+
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		fmt.Println("Successfully setup CLI")
 
 	},
 }
